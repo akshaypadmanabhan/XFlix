@@ -11,7 +11,7 @@ import VideoPlayer from "./VideoPlayer";
 import "./VideoPage.css";
 // import XFlixLogo from "./XFlix.svg";
 
-const VideoPageView = () => {
+const VideoPage = () => {
   const params = useParams();
   const history = useHistory();
   const { enqueueSnackbar } = useSnackbar();
@@ -106,4 +106,4 @@ const VideoPageView = () => {
   );
 };
 
-export default VideoPageView;
+export default VideoPage;

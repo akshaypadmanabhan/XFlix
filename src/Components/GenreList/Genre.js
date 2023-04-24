@@ -1,11 +1,17 @@
+import React, { useState } from "react";
+
+
+
+// MUI-components
 import { Box, Stack } from "@mui/material";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
-import React, { useState } from "react";
-// import "./LandingPage.css";
-// import MenuItem from "@mui/material/MenuItem";
 import { useSnackbar } from "notistack";
+
 import axios from "axios";
+
 import config from "../../Constants/config";
+
+
 
 function GenreList({
   allGenres,

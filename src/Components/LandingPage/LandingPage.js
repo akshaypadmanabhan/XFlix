@@ -47,7 +47,7 @@ const LandingPage = () => {
     setLoading(true);
     try {
       const response = await axios.get(URL);
-      console.log(response.data);
+      // console.log(response.data);
       setVideos(response.data.videos);
       setLoading(false);
     } catch (e) {
@@ -133,12 +133,12 @@ const LandingPage = () => {
   useEffect(() => {
     const URL = `${config.endpoint}/videos`;
     performAPICall(URL);
-    // eslint-disable-next-line
+ 
   }, []);
 
   useEffect(() => {
     performSearch("", genres, selectedContentRatings);
-    // eslint-disable-next-line
+   
   }, [genres, selectedContentRatings]);
 
   return (

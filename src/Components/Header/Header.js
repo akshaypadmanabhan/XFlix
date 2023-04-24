@@ -11,13 +11,14 @@ import UploadIcon from "@mui/icons-material/Upload";
 import Box from "@mui/material/Box";
 import React, { Fragment, useState } from "react";
 import "./Header.css"
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-// import UploadForm from "./UploadForm";
+
 import Dialog from "@mui/material/Dialog";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
 import Grid from "@mui/material/Grid";
+import UploadVideo from "../UploadVideo/UploadVideo";
 
 const Header = ({ children, fetchVideos, genres, contentRatings }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,7 +57,11 @@ const Header = ({ children, fetchVideos, genres, contentRatings }) => {
           </Box>
           <Grid item xs={12}>
            
-            Upload Component 
+          <UploadVideo
+          onClose={handleClose}
+          fetchVideos={fetchVideos}
+          genres={genres}
+          contentRatings={contentRatings}/>
           </Grid>
         </Grid>
       </Dialog>
@@ -69,9 +74,9 @@ const Header = ({ children, fetchVideos, genres, contentRatings }) => {
         sx={{ paddingX: "1rem" }}
       >
         <Box className="header-title" marginTop="1rem">
-          <a style={{ textDecoration: "none" }} href="/"><h3>
-            <span style={{color:"red"}}>X</span>Flix</h3>
-          </a>
+          <Link className="header-title" to='/'><h3 style={{color:"black" , fontSize:"30px" , textDecoration:"none"}}>
+            <span style={{color:"red"}}>X</span >Flix</h3> </Link>
+        
         </Box>
 
         {/* /**Search Box */}

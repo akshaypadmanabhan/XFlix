@@ -1,276 +1,202 @@
-import React, { useState } from 'react'
-import FileUploadIcon from "@mui/icons-material/FileUpload"
-import CloseIcon from '@mui/icons-material/Close'
-import {
-    Box,
-    Stack,
-    Typography,
-    Select,
-    Button,
-    TextField,
-    InputLabel,
-    MenuItem,
-    FormHelperText,
-    FormControl,
-    Modal
-} from "@mui/material"
-// date-fns
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-//import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { LocalizationProvider } from '@mui/x-date-pickers'
-import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker'
-import axios from "axios"
-import { config } from "../App"
-import { useSnackbar } from "notistack"
+import React, { useState } from "react";
+import Button from "@mui/material/Button";
+import MenuItem from "@mui/material/MenuItem";
+import { Box, Stack, TextField } from "@mui/material";
+import  config  from "../../Constants/config";
+import axios from "axios";
+import { useSnackbar } from "notistack";
+import "./UploadVideo.css";
 
-const UploadVideo = () => {
-    const { enqueueSnackbar } = useSnackbar()
-    const [open, setOpen] = useState(false)
-    const [value, setValue] = useState(new Date())
-    const [postData, setPostData] = useState({
-        videoLink: "",
-        previewImage: "",
-        title: "",
-        contentRating: "",
-        genre: "",
-        releaseDate: value,
+const UploadVideo= ({ genres, contentRatings, onClose, fetchVideos }) => {
+  const { enqueueSnackbar } = useSnackbar();
 
-    })
+  const initialState = {
+    videoLink: "",
+    title: "",
+    previewImage: "",
+    genre: "",
+    contentRating: "",
+    releaseDate: "",
+  };
+  const [formData, setFormData] = useState(initialState);
 
-    let dateString = ""
+  const handleInputChange = (e) => {
+    const [key, value] = [e.target.name, e.target.value];
+    setFormData({ ...formData, [key]: value });
+  };
 
-    const handleOpen = () => setOpen(true)
+  const getDate = (value) => {
+    const date = new Date(value);
+    const options = { day: "numeric", month: "short", year: "numeric" };
+    return date.toLocaleDateString("en-IN", options);
+  };
 
-    const handleClose = () => setOpen(false)
+  const handleSubmit = async () => {
+    if (!validateInput(formData)) return;
 
-    const handleLink = (link) => {
-        let urlLink = new URL(link)
-        console.log(urlLink)
-        let videoParam = urlLink.searchParams.get("v")
-        // console.log(videoParam);
-        const finalVideoLink = `youtube.com/embed/${videoParam}`
-        setPostData({ ...postData, videoLink: finalVideoLink })
+    const postData = {
+      ...formData,
+      releaseDate: getDate(formData.releaseDate),
+    };
+
+    try {
+      const req = await axios.post(`${config.endpoint}/videos`, postData);
+      console.log(req.data);
+      if (req.status === 201) {
+        console.log("POST Request made with", postData);
+        enqueueSnackbar("Video Uploaded Successfully", { variant: "success" });
+        // await fetchVideos();
+        setFormData(initialState);
+        onClose();
+      }
+    } catch (e) {
+      if (e && e.response && e.response.data) {
+        enqueueSnackbar(e.response.data.message, { variant: "error" });
+      } else {
+        enqueueSnackbar("Something went wrong", { variant: "error" });
+      }
     }
+  };
 
-    //https://i.ytimg.com/vi/nx2-4l4s4Nw/mqdefault.jpg
-    //youtube.com/embed/nx2-4l4s4Nw
+  const validateInput = (data) => {
+    let validData = { ...data };
 
-    const handleDateChange = (newValue) => {
-        setValue(newValue)
-        const years = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "June",
-            "July",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-        ]
-
-        const date = newValue.getDate();
-
-        const month = years[newValue.getMonth()];
-
-        const fullYear = newValue.getFullYear();
-
-        dateString = date + " " + month + " " + fullYear;
-
-        setPostData({ ...postData, releaseDate: dateString });
+    if (!validData.videoLink) {
+      enqueueSnackbar("Video link is required!", {
+        variant: "warning",
+      });
+      return false;
     }
-
-    const handlePostData = async (dataPost) => {
-        const data = dataPost;
-        if (
-            data.videoLink &&
-            data.title &&
-            data.genre &&
-            data.contentRating &&
-            data.releaseDate &&
-            data.previewImage
-        ) {
-            try {
-                // eslint-disable-next-line
-                const response = await axios.post(`${config.endpoint}`, data, {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-                handleClose();
-                enqueueSnackbar("Uploaded Successfully", { variant: "success" })
-                //return response.data
-
-            } catch (error) {
-                enqueueSnackbar(error.response.data.message, { variant: "error" })
-
-            }
-        } else if (!data.videoLink) {
-            enqueueSnackbar("link must be a valid url", { variant: "warning" })
-
-        } else {
-            enqueueSnackbar("All fields are required", { variant: "warning" })
-
-        }
+    if (!validData.title) {
+      enqueueSnackbar("Title is required!", {
+        variant: "warning",
+      });
+      return false;
     }
+    if (!validData.genre) {
+      enqueueSnackbar("Genre is required!", {
+        variant: "warning",
+      });
+      return false;
+    }
+    if (!validData.contentRating) {
+      enqueueSnackbar("Age group is required!", {
+        variant: "warning",
+      });
+      return false;
+    }
+    if (!validData.releaseDate) {
+      enqueueSnackbar("Upload and Publish date is required!", {
+        variant: "warning",
+      });
+      return false;
+    }
+    return true;
+  };
 
+  return (
+    <Box>
+      <Stack spacing={2}>
+        <TextField
+          required
+          className="form-element"
+          variant="outlined"
+          label="Video Link"
+          helperText="This link will be used to derive the video"
+          fullWidth
+          name="videoLink"
+          value={formData.videoLink}
+          onChange={handleInputChange}
+        />
+        <TextField
+          required
+          className="form-element"
+          variant="outlined"
+          label="Thumbnail Image"
+          helperText="This link will be used to derive the video"
+          fullWidth
+          name="previewImage"
+          value={formData.previewImage}
+          onChange={handleInputChange}
+        />
+        <TextField
+          required
+          className="form-element"
+          variant="outlined"
+          label="Title"
+          helperText="This link will be used to derive the video"
+          fullWidth
+          name="title"
+          value={formData.title}
+          onChange={handleInputChange}
+        />
+        <TextField
+          select
+          required
+          className="select-input form-element"
+          label="Genre"
+          helperText="Genre will help in categorizing your videos"
+          name="genre"
+          value={formData.genre}
+          onChange={handleInputChange}
+        >
+          {genres
+            .filter((option) => option.value !== "All")
+            .map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+        </TextField>
+        <TextField
+          select
+          required
+          className="select-input form-element"
+          label="Suitable age group for the clip"
+          helperText="This will be used to filter videos on age group suitability"
+          name="contentRating"
+          value={formData.contentRating}
+          onChange={handleInputChange}
+        >
+          {contentRatings.map((option) => (
+            <MenuItem key={option.value} value={option.label}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          type="date"
+          className="form-element"
+          label="Release Date"
+          name="releaseDate"
+          helperText="This will be used to sort videos"
+          onChange={handleInputChange}
+          value={formData.releaseDate}
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
+      </Stack>
+      <Stack direction="row" py="1rem" spacing={2}>
+        <Button
+          id="upload-btn-submit"
+          variant="contained"
+          onClick={handleSubmit}
+          color="primary"
+        >
+          Upload Video
+        </Button>
+        <Button
+          id="upload-btn-cancel"
+          variant="text"
+          color="error"
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+      </Stack>
+    </Box>
+  );
+};
 
-
-    return (
-        <div>
-            <Button
-                id="upload-btn"
-                variant="contained"
-                startIcon={<FileUploadIcon />}
-                onClick={handleOpen}
-            >
-                Upload
-            </Button>
-            <Modal
-                open={open}
-                // onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Box className="upload-modal">
-                    <Stack gap="10px" justifyContent="flex-start">
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                
-                            }}
-                        >
-                            <Typography
-                                id="upload-btn-submit"
-                                variant="h6"
-                                component="h2"
-                                sx={{ marginBottom: "2px" }}
-                            >
-                                Upload Video
-                            </Typography>
-                            <CloseIcon onClick={handleClose} sx={{ cursor: "pointer" }} />
-                        </Box>
-                        <TextField
-                            className="video-tile-link"
-                            id="videoLink"
-                            placeholder='Video Link'
-                            variant="outlined"
-                            helperText="This link will be used to derive the video"
-                            onChange={(e) => handleLink(e.target.value)}
-                        />
-                        <TextField
-                            className="video-tile-link"
-                            id="thumbnailImageLink"
-                            placeholder="Thumbnail Image Link"
-                            variant="outlined"
-                            helperText="This link will be used to preview the thumbnail image"
-                            onChange={(e) =>
-                                setPostData({ ...postData, previewImage: e.target.value })
-                            }
-                        />
-                        <TextField
-                            className="video-tile-link"
-                            id="title"
-                            placeholder="Title"
-                            variant="outlined"
-                            helperText="This title will be representative text for video"
-                            onChange={(e) =>
-                                setPostData({ ...postData, title: e.target.value })
-                            }
-                        />
-                        <FormControl>
-                            <InputLabel id="genre">Genre</InputLabel>
-                            <Select
-                                className="genre-btn"
-                                labelId="genre"
-                                id="genreFilter"
-                                label="Genre"
-                                value={postData.genre}
-                                onChange={(e) =>
-                                    setPostData({ ...postData, genre: e.target.value })
-                                }
-                            >
-                                <MenuItem value={"Education"}>Education</MenuItem>
-                                <MenuItem value={"Sports"}>Sports</MenuItem>
-                                <MenuItem value={"Comedy"}>Comedy</MenuItem>
-                                <MenuItem value={"Lifestyle"}>Lifestyle</MenuItem>
-                                {/* <MenuItem value={"Movies"}>Movies</MenuItem> */}
-                            </Select>
-                            <FormHelperText sx={{ marginBottom: "4px" }}>
-                                Genre will help in categorizing your videos
-                            </FormHelperText>
-                        </FormControl>
-
-                        <FormControl>
-                            <InputLabel id="age">Suitable age group for the clip</InputLabel>
-                            <Select
-                                labelId="age"
-                                id="ageFilter"
-                                value={postData.contentRating}
-                                label="Suitable age group for the clip"
-                                onChange={(e) =>
-                                    setPostData({ ...postData, contentRating: e.target.value })
-                                }
-                            >
-                                {/* <MenuItem value={"Anyone"}>Anyone</MenuItem> */}
-                                <MenuItem value={"7+"}>7+</MenuItem>
-                                <MenuItem value={"12+"}>12+</MenuItem>
-                                <MenuItem value={"16+"}>16+</MenuItem>
-                                <MenuItem value={"18+"}>18+</MenuItem>
-                            </Select>
-                            <FormHelperText sx={{ marginBottom: "4px" }}>
-                                This will be used to filter videos on age group suitability
-                            </FormHelperText>
-                        </FormControl>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DesktopDatePicker
-                                label="Upload and Publish Date"
-                                inputFormat="dd/MM/yyyy"
-                                value={value}
-                                onChange={handleDateChange}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        helperText="This will be used to sort videos"
-                                    />
-                                )}
-                            />
-                        </LocalizationProvider>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1rem",
-                                borderRadius: 1,
-                            }}
-                        >
-                            <Button
-                                variant="contained"
-                                color="error"
-                                sx={{ color: "#fff", textTransform: "uppercase", border: "0" }}
-                                onClick={() => handlePostData(postData)}
-                            >
-                                Upload Video
-                            </Button>
-                            <Button
-                                id="upload-btn-cancel"
-                                variant="text"
-                                sx={{color: "#000", textTransform: "uppercase", fontSize: "1rem", fontWeight: "bold" }}
-                                onClick={handleClose}
-                            >
-                                Cancel
-                            </Button>
-                        </Box>
-                    </Stack>
-                </Box>
-            </Modal>
-        </div>
-    )
-}
-
-export default UploadVideo
+export default UploadVideo;

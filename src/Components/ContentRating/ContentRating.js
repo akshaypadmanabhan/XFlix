@@ -1,5 +1,9 @@
-import { Box } from "@mui/material";
 import React from "react";
+
+// MUI-Components
+import { Box } from "@mui/material";
+
+// styles
 import "./ContentRating.css";
 
 const ContentRatingList = ({
